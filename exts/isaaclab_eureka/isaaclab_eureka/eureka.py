@@ -35,6 +35,9 @@ class Eureka:
         temperature: float = 1.0,
         gpt_model: str = "gpt-4",
         num_parallel_runs: int = 1,
+        video: bool = False,
+        video_length: int = 200,
+        video_interval: int = 2000,
     ):
         """Initialize the Eureka class.
 
@@ -83,6 +86,9 @@ class Eureka:
             num_processes=self._num_processes,
             max_training_iterations=max_training_iterations,
             success_metric_string=success_metric_string,
+            video=video,
+            video_length=video_length,
+            video_interval=video_interval,
         )
 
         # Logging

@@ -19,6 +19,24 @@ TASKS_CFG = {
         "success_metric_to_win": 0.0,
         "success_metric_tolerance": 0.2,
     },
+    "Isaac-Franka-Cabinet-Direct-v0": {
+        "description": "grasp the handle of a cabinet’s drawer and open it with the Franka robot",
+        "success_metric": "self._cabinet.data.joint_pos[:, 3] > 0.39",
+        "success_metric_to_win": 1.0,
+        "success_metric_tolerance": 0.01,
+    },
+    "Isaac-GR1T2-Jaw-Upper-Organize-Direct-v0": {
+        "description": (
+            "pick and place the messy cups on the desk back upright, while using theappropriate arm to pick and place"
+            " the cups."
+        ),
+        "success_metric": (
+            "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_rot)) <"
+            " self.cfg.upright_threshold, self.object.data.root_pos_w[:, 2] <= self.cfg.cup_height_threshold)"
+        ),
+        "success_metric_to_win": 1.0,
+        "success_metric_tolerance": 0.01,
+    },
 }
 """Configuration for the tasks supported by Isaac Lab Eureka.
 

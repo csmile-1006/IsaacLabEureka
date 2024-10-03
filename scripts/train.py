@@ -21,6 +21,9 @@ def main(args_cli):
         feedback_subsampling=args_cli.feedback_subsampling,
         temperature=args_cli.temperature,
         gpt_model=args_cli.gpt_model,
+        video=args_cli.video,
+        video_length=args_cli.video_length,
+        video_interval=args_cli.video_interval,
     )
 
     eureka.run(max_eureka_iterations=args_cli.max_eureka_iterations)
@@ -31,6 +34,11 @@ if __name__ == "__main__":
     parser.add_argument("--task", type=str, default="Isaac-Cartpole-Direct-v0", help="Name of the task.")
     parser.add_argument(
         "--num_parallel_runs", type=int, default=1, help="Number of Eureka runs to execute in parallel."
+    )
+    parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
+    parser.add_argument("--video_length", type=int, default=250, help="Length of the recorded video (in steps).")
+    parser.add_argument(
+        "--video_interval", type=int, default=2000, help="Interval between video recordings (in steps)."
     )
     parser.add_argument("--device", type=str, default="cuda", help="The device to run training on.")
     parser.add_argument("--env_seed", type=int, default=42, help="The random seed to use for the environment.")
@@ -62,6 +70,10 @@ if __name__ == "__main__":
         help="The RL training library to use.",
     )
     args_cli = parser.parse_args()
+
+    # always enable cameras to record video
+    if args_cli.video:
+        args_cli.enable_cameras = True
 
     # Check parameter validity
     if os.name == "nt" and args_cli.num_parallel_runs > 1:
