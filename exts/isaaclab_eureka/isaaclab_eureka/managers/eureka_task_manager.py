@@ -308,6 +308,11 @@ class EurekaTaskManager:
                 import gymnasium as gym
 
                 self._env = gym.wrappers.RecordVideo(self._env, **video_kwargs)
+                if "vision" in self._task.lower():
+                    from humanoid_rl.wrappers.observation_video_wrapper import ObservationVideoWrapper
+
+                    video_kwargs["video_folder"] = os.path.join(self._log_dir, "videos", "front")
+                    self._env = ObservationVideoWrapper(self._env, **video_kwargs)
 
             env = RslRlVecEnvWrapper(self._env)
             runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=self._log_dir, device=agent_cfg.device)
