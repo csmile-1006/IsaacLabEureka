@@ -27,33 +27,65 @@ TASKS_CFG = {
     },
     "Isaac-GR1T2-Jaw-Upper-Organize-Direct-v0": {
         "description": (
-            "grasp and place the messy cup on the desk back upright, while using the arm that is close to the cup."
+            "Using the arm closest to the cup, grasp the messy cup on the desk and place it back in an upright"
+            " position."
         ),
         "success_metric": (
-            "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_quat)) <"
-            " self.cfg.upright_threshold, self.object.data.root_pos_w[:, 2] <= self.cfg.cup_height_threshold)"
+            "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_rot)) <"
+            " self.cfg.object_upright_threshold, self.object.data.root_pos_w[:, 2] <= self.cfg.table_height +"
+            " self.cfg.epsilon)"
         ),
         "success_metric_to_win": 1.0,
         "success_metric_tolerance": 0.01,
     },
     "Isaac-GR1T2-Jaw-Upper-Organize-Unimanual-Vision-Direct-v0": {
         "description": (
-            "grasp and place the messy cup on the desk back upright, while using the arm that is close to the cup."
+            "Using the arm closest to the cup, grasp the messy cup on the desk and place it back in an upright"
+            " position."
         ),
         "success_metric": (
-            "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_quat)) <"
-            " self.cfg.upright_threshold, self.object.data.root_pos_w[:, 2] <= self.cfg.cup_height_threshold)"
+            "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_rot)) <"
+            " self.cfg.object_upright_threshold, self.object.data.root_pos_w[:, 2] <= self.cfg.table_height +"
+            " self.cfg.epsilon)"
         ),
         "success_metric_to_win": 1.0,
         "success_metric_tolerance": 0.01,
     },
     "Isaac-GR1T2-Jaw-Upper-Organize-Bimanual-Vision-Direct-v0": {
         "description": (
-            "grasp and place the messy cup on the desk back upright, while using the arm that is close to the cup."
+            "Using the arm closest to the cup, grasp the messy cup on the desk and place it back in an upright"
+            " position."
         ),
         "success_metric": (
-            "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_quat)) <"
-            " self.cfg.upright_threshold, self.object.data.root_pos_w[:, 2] <= self.cfg.cup_height_threshold)"
+            "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_rot)) <"
+            " self.cfg.object_upright_threshold, self.object.data.root_pos_w[:, 2] <= self.cfg.table_height +"
+            " self.cfg.epsilon)"
+        ),
+        "success_metric_to_win": 1.0,
+        "success_metric_tolerance": 0.01,
+    },
+    "Isaac-GR1T2-Legato-Upper-Organize-Unimanual-Vision-Direct-v0": {
+        "description": (
+            "Using the arm closest to the cup, grasp the messy cup on the desk and place it back in an upright"
+            " position."
+        ),
+        "success_metric": (
+            "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_rot)) <"
+            " self.cfg.object_upright_threshold, self.object.data.root_pos_w[:, 2] <= self.cfg.table_height +"
+            " self.cfg.epsilon)"
+        ),
+        "success_metric_to_win": 1.0,
+        "success_metric_tolerance": 0.01,
+    },
+    "Isaac-GR1T2-Legato-Upper-Organize-Bimanual-Vision-Direct-v0": {
+        "description": (
+            "Using the arm closest to the cup, grasp the messy cup on the desk and place it back in an upright"
+            " position."
+        ),
+        "success_metric": (
+            "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_rot)) <"
+            " self.cfg.object_upright_threshold, self.object.data.root_pos_w[:, 2] <= self.cfg.table_height +"
+            " self.cfg.epsilon)"
         ),
         "success_metric_to_win": 1.0,
         "success_metric_tolerance": 0.01,
