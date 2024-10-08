@@ -63,7 +63,8 @@ class EurekaTaskManager:
     def __init__(
         self,
         task: str,
-        rl_library: Literal["rsl_rl", "rl_games"] = "rsl_rl",
+        rl_library: Literal["rsl_rl", "rl_games", "robobase"] = "rsl_rl",
+        num_envs: int = 16,
         num_processes: int = 1,
         device: str = "cuda",
         env_seed: int = 42,
@@ -90,6 +91,7 @@ class EurekaTaskManager:
         self._device = device
         self._max_training_iterations = max_training_iterations
         self._success_metric_string = success_metric_string
+        self._num_envs = num_envs
         self._env_seed = env_seed
         if self._success_metric_string:
             self._success_metric_string = "extras['Eureka/success_metric'] = " + self._success_metric_string
@@ -106,6 +108,8 @@ class EurekaTaskManager:
         self._results_queue = multiprocessing.Queue()
         # Used to signal the processes to terminate
         self.termination_event = multiprocessing.Event()
+        # Get the start time
+        self._start_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
         for idx in range(self._num_processes):
             p = multiprocessing.Process(target=self._worker, args=(idx, self._rewards_queues[idx]))
@@ -229,6 +233,7 @@ class EurekaTaskManager:
         env_cfg: DirectRLEnvCfg = parse_env_cfg(self._task)
         env_cfg.sim.device = self._device
         env_cfg.seed = self._env_seed
+        env_cfg.scene.num_envs = self._num_envs if self._num_envs is not None else env_cfg.scene.num_envs
         self._env = gym.make(self._task, cfg=env_cfg, render_mode="rgb_array" if self._video else None)
 
     def _prepare_eureka_environment(self, get_rewards_method_as_string: str):
@@ -258,7 +263,7 @@ class EurekaTaskManager:
                 module_name=env.__module__, success_metric=self._success_metric_string
             )
             # hack: can't enable inference with rl_games
-            if self._rl_library == "rl_games":
+            if self._rl_library == "rl_games" or self._rl_library == "robobase":
                 template_reset_string_with_success_metric = template_reset_string_with_success_metric.replace(
                     "@torch.inference_mode()", ""
                 )
@@ -288,7 +293,9 @@ class EurekaTaskManager:
             agent_cfg.device = self._device
             agent_cfg.max_iterations = self._max_training_iterations
 
-            log_root_path = os.path.join("logs", "rl_runs", "rsl_rl_eureka", agent_cfg.experiment_name)
+            log_root_path = os.path.join(
+                "logs", "rl_runs", "rsl_rl_eureka", agent_cfg.experiment_name, self._start_time
+            )
             log_root_path = os.path.abspath(log_root_path)
             print(f"[INFO] Logging experiment in directory: {log_root_path}")
             # specify directory for logging runs: {time-stamp}_{run_name}
@@ -307,14 +314,15 @@ class EurekaTaskManager:
                 print("[INFO] Recording videos during training.")
                 import gymnasium as gym
 
-                self._env = gym.wrappers.RecordVideo(self._env, **video_kwargs)
+                _env = gym.wrappers.RecordVideo(self._env, **video_kwargs)
                 if "vision" in self._task.lower():
                     from humanoid_rl.wrappers.observation_video_wrapper import ObservationVideoWrapper
 
                     video_kwargs["video_folder"] = os.path.join(self._log_dir, "videos", "front")
-                    self._env = ObservationVideoWrapper(self._env, **video_kwargs)
-
-            env = RslRlVecEnvWrapper(self._env)
+                    _env = ObservationVideoWrapper(_env, **video_kwargs)
+            else:
+                _env = self._env
+            env = RslRlVecEnvWrapper(_env)
             runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=self._log_dir, device=agent_cfg.device)
             runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True)
 
@@ -365,5 +373,59 @@ class EurekaTaskManager:
             runner.reset()
             # train the agent
             runner.run({"train": True, "play": False, "sigma": None})
+
+        elif self._rl_library == "robobase":
+            from humanoid_rl.tasks.utils.wrappers.robobase import RobobaseVecEnvWrapper
+            from omegaconf import DictConfig
+            from robobase.isaaclab_workspace import IsaacLabWorkspace
+
+            agent_cfg = load_cfg_from_registry(self._task, "robobase_cfg_entry_point")
+            agent_cfg = DictConfig(agent_cfg)
+            agent_cfg.num_train_envs = self._env.unwrapped.num_envs
+            agent_cfg.num_train_frames = (
+                self._env.unwrapped.max_episode_length * self._env.unwrapped.num_envs
+                + self._max_training_iterations * self._env.unwrapped.num_envs
+                + 10
+            )
+
+            log_root_path = os.path.join(
+                "logs", "rl_runs", "robobase_rl_eureka", agent_cfg.experiment.directory, self._start_time
+            )
+            log_root_path = os.path.abspath(log_root_path)
+            print(f"[INFO] Logging experiment in directory: {log_root_path}")
+            # specify directory for logging runs: {time-stamp}_{run_name}
+            log_dir = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + f"_Run-{self._idx}"
+            self._log_dir = os.path.join(log_root_path, log_dir)
+            agent_cfg.tb.log_dir = self._log_dir
+            agent_cfg.replay.save_dir = os.path.join(self._log_dir, "replay")
+
+            if self._video:
+                video_kwargs = {
+                    "video_folder": os.path.join(self._log_dir, "videos", "train"),
+                    "step_trigger": lambda step: step % self._video_interval == 0,
+                    "video_length": self._video_length,
+                    "disable_logger": True,
+                }
+                print("[INFO] Recording videos during training.")
+                import gymnasium as gym
+
+                _env = gym.wrappers.RecordVideo(self._env, **video_kwargs)
+                if "vision" in self._task.lower():
+                    from humanoid_rl.wrappers.observation_video_wrapper import ObservationVideoWrapper
+
+                    video_kwargs["video_folder"] = os.path.join(self._log_dir, "videos", "front")
+                    _env = ObservationVideoWrapper(_env, **video_kwargs)
+            else:
+                _env = self._env
+            env = RobobaseVecEnvWrapper(_env)
+            # load workspace of Robobase
+            workspace = IsaacLabWorkspace(cfg=agent_cfg, env=env, env_factory=None, work_dir=self._log_dir)
+
+            # hack: change the log_dir to the tensorboard file
+            self._log_dir = os.path.join(self._log_dir, agent_cfg.tb.name)
+
+            # train the agent
+            workspace.train()
+
         else:
             raise Exception(f"framework {framework} is not supported yet.")

@@ -14,6 +14,7 @@ def main(args_cli):
     eureka = Eureka(
         task=args_cli.task,
         rl_library=args_cli.rl_library,
+        num_envs=args_cli.num_envs,
         num_parallel_runs=args_cli.num_parallel_runs,
         device=args_cli.device,
         env_seed=args_cli.env_seed,
@@ -32,6 +33,7 @@ def main(args_cli):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train an RL agent with Eureka.")
     parser.add_argument("--task", type=str, default="Isaac-Cartpole-Direct-v0", help="Name of the task.")
+    parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to run in parallel.")
     parser.add_argument(
         "--num_parallel_runs", type=int, default=1, help="Number of Eureka runs to execute in parallel."
     )
@@ -66,7 +68,7 @@ if __name__ == "__main__":
         "--rl_library",
         type=str,
         default="rsl_rl",
-        choices=["rsl_rl", "rl_games"],
+        choices=["rsl_rl", "rl_games", "robobase"],
         help="The RL training library to use.",
     )
     args_cli = parser.parse_args()

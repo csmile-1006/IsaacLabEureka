@@ -27,7 +27,7 @@ TASKS_CFG = {
     },
     "Isaac-GR1T2-Jaw-Upper-Organize-Direct-v0": {
         "description": (
-            "pick and place the messy cup on the desk back upright, while using the arm that is close to the cup."
+            "grasp and place the messy cup on the desk back upright, while using the arm that is close to the cup."
         ),
         "success_metric": (
             "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_quat)) <"
@@ -36,9 +36,20 @@ TASKS_CFG = {
         "success_metric_to_win": 1.0,
         "success_metric_tolerance": 0.01,
     },
-    "Isaac-GR1T2-Jaw-Upper-Organize-Vision-Direct-v0": {
+    "Isaac-GR1T2-Jaw-Upper-Organize-Unimanual-Vision-Direct-v0": {
         "description": (
-            "pick and place the messy cup on the desk back upright, while using the arm that is close to the cup."
+            "grasp and place the messy cup on the desk back upright, while using the arm that is close to the cup."
+        ),
+        "success_metric": (
+            "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_quat)) <"
+            " self.cfg.upright_threshold, self.object.data.root_pos_w[:, 2] <= self.cfg.cup_height_threshold)"
+        ),
+        "success_metric_to_win": 1.0,
+        "success_metric_tolerance": 0.01,
+    },
+    "Isaac-GR1T2-Jaw-Upper-Organize-Bimanual-Vision-Direct-v0": {
+        "description": (
+            "grasp and place the messy cup on the desk back upright, while using the arm that is close to the cup."
         ),
         "success_metric": (
             "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_quat)) <"
