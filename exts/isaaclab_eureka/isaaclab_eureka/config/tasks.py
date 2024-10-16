@@ -64,15 +64,17 @@ TASKS_CFG = {
         "success_metric_to_win": 1.0,
         "success_metric_tolerance": 0.01,
     },
-    "Isaac-GR1T2-Legato-Upper-Organize-Unimanual-Vision-Direct-v0": {
-        "description": (
-            "Using the arm closest to the cup, grasp the messy cup on the desk and place it back in an upright"
-            " position."
-        ),
+    "Isaac-GR1T2-Legato-Upper-Grasp-Unimanual-Vision-Direct-v0": {
+        "description": "grasp the cup with the left hand.",
         "success_metric": (
-            "torch.logical_and(abs(rotation_distance(self.object.data.root_quat_w, self.goal_rot)) <"
-            " self.cfg.object_upright_threshold, self.object.data.root_pos_w[:, 2] <= self.cfg.table_height +"
-            " self.cfg.epsilon)"
+            "torch.norm(self.left_ee_frame.data.target_pos_w[:, 0] - self.object.data.root_pos_w, dim=-1) <= 0.05 &"
+            " torch.abs(self.robot.data.body_pos_w[:, self.left_hand_left_finger_idx][:, 0] -"
+            " self.object.data.root_pos_w[:, 0]) <= 0.05 & torch.abs(self.robot.data.body_pos_w[:,"
+            " self.left_hand_right_finger_idx][:, 0] - self.object.data.root_pos_w[:, 0]) <= 0.05 &"
+            " (torch.sign(torch.bmm(math_utils.matrix_from_quat(self.left_hand_quat)[..., 2].unsqueeze(1),"
+            " math_utils.matrix_from_quat(self.object_rot)[..., 2].unsqueeze(-1)).squeeze(-1).squeeze(-1)) *"
+            " torch.bmm(math_utils.matrix_from_quat(self.left_hand_quat)[..., 2].unsqueeze(1),"
+            " math_utils.matrix_from_quat(self.object_rot)[..., 2].unsqueeze(-1)).squeeze(-1).squeeze(-1)**2) > 0.9"
         ),
         "success_metric_to_win": 1.0,
         "success_metric_tolerance": 0.01,
