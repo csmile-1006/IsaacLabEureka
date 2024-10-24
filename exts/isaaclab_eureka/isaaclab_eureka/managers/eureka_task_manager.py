@@ -263,7 +263,7 @@ class EurekaTaskManager:
                 module_name=env.__module__, success_metric=self._success_metric_string
             )
             # hack: can't enable inference with rl_games
-            if self._rl_library == "rl_games" or self._rl_library == "robobase":
+            if self._rl_library == "rl_games" or self._rl_library == "robobase" or self._rl_library == "rsl_rl":
                 template_reset_string_with_success_metric = template_reset_string_with_success_metric.replace(
                     "@torch.inference_mode()", ""
                 )
